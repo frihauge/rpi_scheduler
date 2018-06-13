@@ -14,7 +14,7 @@ class RPI_Sceduler:
        self.address = 40
        self.max_expected_amps = 0.6
        self.ina = None
-       initINA219()
+       self.initINA219()
        self.ConnectFTP(ftphost = '52.214.152.160',user='greentech',pwd='jf7834#)kc!_')   
    
     def makemeasurements(self):
