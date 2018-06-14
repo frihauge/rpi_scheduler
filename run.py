@@ -17,7 +17,7 @@ class RPI_Sceduler:
        self.fc = None
        self.measurement =dict()
   
-       #self.initINA219()
+       self.initINA219()
        self.ConnectFileCtrl()   
    
     def makemeasurements(self):
