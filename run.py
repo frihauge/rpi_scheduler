@@ -1,7 +1,7 @@
 import time
 import sys
 import threading
-from app import ftpmodule
+from app.ftpmodule import FileCtrl
 from ina219 import INA219
 
 
@@ -14,23 +14,39 @@ class RPI_Sceduler:
        self.address = 40
        self.max_expected_amps = 0.6
        self.ina = None
-       self.initINA219()
-       self.ConnectFTP(ftphost = '52.214.152.160',user='greentech',pwd='jf7834#)kc!_')   
+       self.fc = None
+       self.measurement =dict()
+  
+       #self.initINA219()
+       self.ConnectFileCtrl()   
    
     def makemeasurements(self):
        print "\nMake Measurement"
-       v = self.ina.voltage()
-       i = self.ina.current()
-       p = self.ina.power()
+       #v = self.ina.voltage()
+       #i = self.ina.current()
+       #p = self.ina.power()
+       i = 0.3456
+       
+       timesring = time.strftime("%Y%m%d-%H%M%S")
+       self.measurement[timesring] = i
+      
+       
+       if self.fc is not None:
+           self.fc.UpdateLocalDataFile(self.measurement)
        print ('Measured Current:{0:.2f}'.format(i))
 
     def uploadFile(self):
+       if self.fc is not None:
+           self.fc.UploadLocalDataFile()
+           self.measurement = None
+           self.measurement =dict()
        print "\nUpload File"
       
-    def ConnectFTP(self,ftphost ,user,pwd): 
+    def ConnectFileCtrl(self):
+        self.fc = FileCtrl()
         return 
     
-    def initINA219():
+    def initINA219(self):
         self.ina = INA219(shunt_ohms=0.1,
                      max_expected_amps = 0.6,
                      address=0x40)
@@ -48,8 +64,6 @@ while True:
         sys.stdout.flush()
         time.sleep(1)
         seconds = int(time.time() - time_start) - minutes * 60
-
- 
         if seconds == 30:
             rpi_Sch.makemeasurements()
         if seconds >= 60:

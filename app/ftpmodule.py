@@ -1,18 +1,18 @@
+import os
+import io
+from operator import methodcaller
+import json
 from ftplib import FTP
-import logging
+import time
 
 class FTPConnect:
-  server="77.68.194.39"
-  user="OSRA"
-  password="R3m0T3"
-  SettingsFileName="settings.json"
-  cScriptDoneFolder= "ScriptDone"
-  cScriptWaitingFolder = "ScriptWaiting"
+  server="52.214.152.160"
+  user="greentech"
+  password="jf7834#)kc!_"
+
   def chdir(self,dir):
     if self.directory_exists(dir) is False: # Create it if not exsist
       self.ftp.mkd(dir)
-      self.ftp.mkd(dir+"//ScriptDone")
-      self.ftp.mkd(dir+"//ScriptWaiting")
     self.ftp.cwd(dir)
 
   def directory_exists(self, directory_name):
@@ -35,7 +35,7 @@ class FTPConnect:
     try:
      self.ftp = FTP(self.server, timeout=5)
      self.ftp.login(self.user,self.password)
-     logging.warning("FTP logging in")
+     print("FTP logging in")
     except Exception,e:
      print e
      return False
@@ -48,7 +48,7 @@ class FTPConnect:
     print self.serienummer
     try:
       self.connect()
-      self.chdir(self.serienummer)
+      #self.chdir(self.serienummer)
     except Exception,e:
       print e
     else:
@@ -57,26 +57,9 @@ class FTPConnect:
   def UploadFile(self, file,filename):
     self.ftp.storbinary('STOR ' +filename, file)
   
-  def moveConfigfile(self,DevUI,State):
-    timestr = time.strftime("%Y%m%d-%H%M%S")
-    if State:
-      finalfilename = "{}//{}_Pass.json".format(self.cScriptDoneFolder,timestr)
-    else:
-      finalfilename = "{}//{}_Error.json".format(self.cScriptDoneFolder,timestr)
-    self.ftp.cwd("/"+DevUI)
-    print(self.ftp.pwd())
-    self.ftp.rename("{}//{}.json".format(self.cScriptWaitingFolder,DevUI),finalfilename)
 
    
-  def GetBlindSettingsFile(self,filename):
-    logging.debug("Get Setting File")
-    files = self.ftp.dir()
-    self.make_sure_path_exists("localfiles")
-    gFile = open("localfiles//"+filename, "wb") ##Create Local file
-    self.ftp.retrbinary("RETR " + filename, lambda s, w=gFile.write: w(s+"\n"))
-    gFile = open("localfiles//"+filename, "r")##Open local file
-    buff = gFile.read()
-    return buff
+
 
   def GetFTPFileExist(self,file_name):
     filelist = []
@@ -96,9 +79,13 @@ class FTPConnect:
 
 
 class FileCtrl:
-    
+     
   def __init__(self):
-    self.BlindCtrlSerialNumber = self.getserial() 
+    self.RpiSerialNumber = self.getserial() 
+    if not os.path.exists('localfiles'):
+        os.makedirs('localfiles')
+        
+    
            
   def getserial(self):
     # Extract serial from cpuinfo file
@@ -113,107 +100,43 @@ class FileCtrl:
       cpuserial = "ERROR000000000"
     return cpuserial
   
-  def FtpMainGetFile(self):
-    serienummer = self.BlindCtrlSerialNumber
-    logging.debug('Serial Number is: '+ serienummer)
-    lFtp = FTPConnect(serienummer)
-    if lFtp.GetFTPFileExist(serienummer+'.json'):
-      lFtp.GetBlindSettingsFile(serienummer+'.json')
-      lFtp.Close()
-      return True
-    #else:
-    lFtp.Close()
-    return False
-
-  def FtpMainFileExist(self):
-    serienummer = self.BlindCtrlSerialNumber
-    logging.debug('Serial Number is: '+ serienummer)
-    lFtp = FTPConnect(serienummer)
-    state =  lFtp.GetFTPFileExist(serienummer+'.json')
-    lFtp.Close()
-    return state
     
 
-  def CreateLocalDataFile(self):
-      
-      Ch = Commandhandler()
-      StrAll_Modules=Ch.ScanNet()
-      # create blinddataobject
-      print("Parse All Data from modules")
-      BCD = BlindCtrlData(self.BlindCtrlSerialNumber)
-      BCD.ParseObjects(StrAll_Modules)
-      with open("localfiles//"+self.BlindCtrlSerialNumber+"_l.json", "w") as outfile:
-        json.dump(BCD, outfile,indent=2, sort_keys=True, default=methodcaller("jsondefault"))
-      print("Parse done")
+  def UpdateLocalDataFile(self,measumentdata):
+    if os.path.isfile('localfiles//'+self.RpiSerialNumber+'_l.json') and os.access('localfiles//'+self.RpiSerialNumber+'_l.json', os.R_OK):
+        # checks if file exists
+        print ("File exists and is readable")
+    else:
+        print ("Either file is missing or is not readable, creating file...")
+        self.CreateLocalDataFile()
+    print('RPI serial:' + self.RpiSerialNumber)
+    print measumentdata
+    with open('localfiles//'+self.RpiSerialNumber+'_l.json','r+') as outfile:
+        #  data = json.load(outfile)
+        #  data.update(measumentdata)
+        #  print data  
+        json.dump(measumentdata, outfile)
+    print("Parse done")
   
+  def CreateLocalDataFile(self):
+      with open('localfiles//'+self.RpiSerialNumber+'_l.json','w') as outfile:
+          json.dump({}, outfile)
+      print("Parse done")
   def UploadLocalDataFile(self):
-      serienummer = self.BlindCtrlSerialNumber
+      serienummer = self.RpiSerialNumber
       lFtp = FTPConnect(serienummer)
       print('Upload Local file to FTP')
-      file = open('localfiles//'+self.BlindCtrlSerialNumber+'_l.json','rb')
-      lFtp.UploadFile(file,self.BlindCtrlSerialNumber+'.json')
+      timestr = time.strftime("%Y%m%d-%H%M%S")
+      file = open('localfiles//'+self.RpiSerialNumber+'_l.json','rb')
+      lFtp.UploadFile(file,self.RpiSerialNumber+'_'+timestr+'.json')
       file.close()
       lFtp.Close()
+      #delete file
+      os.remove('localfiles//'+self.RpiSerialNumber+'_l.json')
 
-  def GetWaitingConfigFile(self):
-      serienummer = self.BlindCtrlSerialNumber
-      self.lFtp = FTPConnect(serienummer)
-      self.lFtp.ftp.cwd("ScriptWaiting")
-      logging.debug("See if file is waiting")
-      files = self.lFtp.ftp.dir()
-      state =  self.lFtp.GetFTPFileExist(serienummer+'.json')
-      if state:
-        self.waitingfile = self.lFtp.GetBlindSettingsFile(serienummer+'.json')
-      return state    
 
-  def programNewSettings(self):
-      status = False
-      Ch = Commandhandler()
-    #  print(self.updateBlindObj.BlindCtrls)
-      for blctrl in self.updateBlindObj.BlindCtrls:
-        status = Ch.ProgramCtrl(blctrl)
-        if status == False:
-          return status 
-      return status 
-  
-  def GetAndExecuteWaitingFile(self):
-      if self.GetWaitingConfigFile():
-        parsestate=False
-        print("Load new file")
-        UpdateBlinddata = BlindCtrlData(self.BlindCtrlSerialNumber)
-        self.updateBlindObj = UpdateBlinddata.FillObjWithJson(self.waitingfile)
-        if self.updateBlindObj.DoUpdate and self.updateBlindObj.DeviceNumber == self.BlindCtrlSerialNumber:
-            print ("Do update")
-            parsestate = True
-            self.programNewSettings()
-            #update main file 
-            self.CreateLocalDataFile()
-            print("Upload local file to FTP")
-            self.UploadLocalDataFile()
-        else:
-            parsestate = False
-            print("Mark file as error and move file to ")    
- #move file to done folder
-        self.lFtp.moveConfigfile(self.BlindCtrlSerialNumber,parsestate)     
 
-      else:
-        print("No waiting file found")        
-      
-      self.lFtp.Close()
-        
-  def RunUpdate(self):
-    try:   
-      if self.FtpMainFileExist() == True:
-         self.GetAndExecuteWaitingFile()
-         return("File OK")
-      else:
-        print("No Valid FTP file availble, create a local file from devicedata")
-        self.CreateLocalDataFile()
-        print("Upload local file to FTP")
-        self.UploadLocalDataFile()
-    except Exception, e:
-      print (e)   
-     # return ("")
+
 
       
       
