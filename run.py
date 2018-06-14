@@ -1,3 +1,4 @@
+import schedule
 import time
 import sys
 import threading
@@ -17,14 +18,16 @@ class RPI_Sceduler:
        self.fc = None
        self.measurement =dict()
   
-       self.initINA219()
+      # self.initINA219()
        self.ConnectFileCtrl()   
    
     def makemeasurements(self):
        print "\nMake Measurement"
-       v = self.ina.voltage()
-       i = self.ina.current()
-       p = self.ina.power()
+       i = 0
+       if self.ina is not None:
+           v = self.ina.voltage()
+           i = self.ina.current()
+           p = self.ina.power()
        print (i)
        
        timesring = time.strftime("%Y%m%d-%H%M%S")
@@ -36,12 +39,15 @@ class RPI_Sceduler:
        print ('Measured Current:{0:.2f}'.format(i))
 
     def uploadFile(self):
-       if self.fc is not None:
-           self.fc.UploadLocalDataFile()
-           self.measurement = None
-           self.measurement =dict()
-       print "\nUpload File"
-      
+        if self.fc is not None:
+            if self.fc.UploadLocalDataFile() == True:
+               self.measurement = None
+               self.measurement =dict()
+               print "\nUpload File"
+            else:
+               print "\nUpload File failed"
+                
+        
     def ConnectFileCtrl(self):
         self.fc = FileCtrl()
         return 
@@ -55,24 +61,26 @@ class RPI_Sceduler:
 time_start = time.time()
 seconds = 0
 minutes = 0
-
+       
+def Uploadingevent():
+    print("Uploading file to FTP...")
+    rpi_Sch.uploadFile()
+def Measureevent():
+    print("Making measurement...")
+    rpi_Sch.makemeasurements()
+    
 print ("Current shunt scheduled measurement")
 rpi_Sch = RPI_Sceduler()
+schedule.every(30).seconds.do(Measureevent)
+schedule.every().hour.do(Uploadingevent)
 
 while True:
     try:
-        sys.stdout.write("\r{minutes} Minutes {seconds} Seconds".format(minutes=minutes, seconds=seconds))
-        sys.stdout.flush()
+        schedule.run_pending()
         time.sleep(1)
-        seconds = int(time.time() - time_start) - minutes * 60
-        if seconds == 30:
-            rpi_Sch.makemeasurements()
-        if seconds >= 60:
-            rpi_Sch.makemeasurements()
-            minutes += 1
-            seconds = 0
+        
+        
         if minutes >= 60:
-            rpi_Sch.uploadFile()
             minutes = 0
     except KeyboardInterrupt, e:
         break

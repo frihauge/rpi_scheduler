@@ -46,13 +46,13 @@ class FTPConnect:
   def __init__(self,serienummer):
     self.serienummer = serienummer
     print self.serienummer
-    try:
-      self.connect()
+#    try:
+      #self.connect()
       #self.chdir(self.serienummer)
-    except Exception,e:
-      print e
-    else:
-     self.data = []
+#    except Exception,e:
+    #  print e
+   # else:
+    self.data = []
 
   def UploadFile(self, file,filename):
     self.ftp.storbinary('STOR ' +filename, file)
@@ -125,14 +125,17 @@ class FileCtrl:
   def UploadLocalDataFile(self):
       serienummer = self.RpiSerialNumber
       lFtp = FTPConnect(serienummer)
-      print('Upload Local file to FTP')
-      timestr = time.strftime("%Y%m%d-%H%M%S")
-      file = open('localfiles//'+self.RpiSerialNumber+'_l.json','rb')
-      lFtp.UploadFile(file,self.RpiSerialNumber+'_'+timestr+'.json')
-      file.close()
-      lFtp.Close()
-      #delete file
-      os.remove('localfiles//'+self.RpiSerialNumber+'_l.json')
+      if lFtp.connect() == True:
+          print('Upload Local file to FTP')
+          timestr = time.strftime("%Y%m%d-%H%M%S")
+          file = open('localfiles//'+self.RpiSerialNumber+'_l.json','rb')
+          lFtp.UploadFile(file,self.RpiSerialNumber+'_'+timestr+'.json')
+          file.close()
+          lFtp.Close()     #delete file
+          os.remove('localfiles//'+self.RpiSerialNumber+'_l.json')
+          return True
+      else:
+          return False    
 
 
 
