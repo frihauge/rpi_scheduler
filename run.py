@@ -50,6 +50,7 @@ class RPI_Sceduler:
         self.ina = INA219(shunt_ohms=0.1,
                      max_expected_amps = 0.6,
                      address=0x40)
+        self.ina.configure(ina.RANGE_16V)
 
 time_start = time.time()
 seconds = 0
