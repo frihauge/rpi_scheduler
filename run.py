@@ -22,10 +22,10 @@ class RPI_Sceduler:
    
     def makemeasurements(self):
        print "\nMake Measurement"
-       #v = self.ina.voltage()
-       #i = self.ina.current()
-       #p = self.ina.power()
-       i = 0.3456
+       v = self.ina.voltage()
+       i = self.ina.current()
+       p = self.ina.power()
+       print (i)
        
        timesring = time.strftime("%Y%m%d-%H%M%S")
        self.measurement[timesring] = i
