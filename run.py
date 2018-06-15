@@ -36,12 +36,10 @@ class RPI_Sceduler:
        self.measurement[timesring] = dict()
        self.measurement[timesring]['Current'] = i 
        self.measurement[timesring]['Voltage'] = v 
-       
-      
+           
         
        if self.fc is not None:
            self.fc.UpdateLocalDataFile(self.measurement)
-       print ('Measured Current:{0:.2f}'.format(i))
 
     def uploadFile(self):
         if self.fc is not None:
