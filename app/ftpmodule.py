@@ -1,4 +1,5 @@
 import os
+import shutil
 import io
 from operator import methodcaller
 import json
@@ -116,27 +117,40 @@ class FileCtrl:
         #  data.update(measumentdata)
         #  print data  
         json.dump(measumentdata, outfile)
+   
     print("Parse done")
   
   def CreateLocalDataFile(self):
       with open('localfiles//'+self.RpiSerialNumber+'_l.json','w') as outfile:
           json.dump({}, outfile)
       print("Parse done")
-  def UploadLocalDataFile(self):
+      
+  def UploadLocalDataFile(self, copytolocal=False):
       serienummer = self.RpiSerialNumber
       lFtp = FTPConnect(serienummer)
       if lFtp.connect() == True:
           print('Upload Local file to FTP')
           timestr = time.strftime("%Y%m%d-%H%M%S")
           file = open('localfiles//'+self.RpiSerialNumber+'_l.json','rb')
-          lFtp.UploadFile(file,self.RpiSerialNumber+'_'+timestr+'.json')
+          filename = self.RpiSerialNumber+'_'+timestr+'.json'
+          lFtp.UploadFile(file,filename)
           file.close()
           lFtp.Close()     #delete file
-          os.remove('localfiles//'+self.RpiSerialNumber+'_l.json')
           return True
       else:
           return False    
-
+      
+  def CopyFileToUSB(self,destination):
+      source = 'localfiles//'+self.RpiSerialNumber+'_l.json'
+      timestr = time.strftime("%Y%m%d-%H%M%S")
+      filename = self.RpiSerialNumber+'_'+timestr+'.json'
+      try:
+          shutil.copy2(source, destination+ '//'+filename)
+      except shutil.Error as e:
+          print("Error: %s" % e)
+              # E.g. source or destination does not exist
+      except IOError as e:
+          print("Error: %s" % e.strerror)
 
 
 
