@@ -83,7 +83,7 @@ print ("Current shunt scheduled measurement")
 
 rpi_Sch = RPI_Sceduler()
 schedule.every(30).seconds.do(Measureevent)
-schedule.every(45).seconds.do(Uploadingevent)
+#schedule.every(45).seconds.do(Uploadingevent)
 schedule.every().hour.do(Uploadingevent)
 print ("Startup complete/n")
 print ("Measurement  run every 30 sec and upload every 1 hour")
