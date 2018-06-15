@@ -7,7 +7,6 @@ from ina219 import INA219
 
 
 
-
 class RPI_Sceduler:
 
     def __init__(self):
