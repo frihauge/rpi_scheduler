@@ -139,13 +139,14 @@ class FileCtrl:
           return True
       else:
           return False    
-      
+    
   def CopyFileToUSB(self,destination):
       source = 'localfiles//'+self.RpiSerialNumber+'_l.json'
       timestr = time.strftime("%Y%m%d-%H%M%S")
       filename = self.RpiSerialNumber+'_'+timestr+'.json'
+      print("Copy file " + source + "to "+ destination+ '//'+filename)
       try:
-          shutil.copy2(source, destination+ '//'+filename)
+          shutil.copy2(source, destination+ '/'+filename)
       except shutil.Error as e:
           print("Error: %s" % e)
               # E.g. source or destination does not exist

@@ -40,6 +40,7 @@ class RPI_Sceduler:
         
        if self.fc is not None:
            self.fc.UpdateLocalDataFile(self.measurement)
+          # self.fc.CopyFileToUSB("/media/USB")
 
     def uploadFile(self):
         if self.fc is not None:
@@ -53,17 +54,19 @@ class RPI_Sceduler:
             else:
                print "\nUpload File failed"
                os.remove('localfiles//'+self.RpiSerialNumber+'_l.json') 
-              
-        
+            
+         
     def ConnectFileCtrl(self):
         self.fc = FileCtrl()
         return 
-    
+     
     def initINA219(self):
-        self.ina = INA219(shunt_ohms=0.1,
-                     max_expected_amps = 0.6,
+        self.ina = INA219(shunt_ohms=0.0015,
+                     max_expected_amps = 50,
                      address=0x40)
-        self.ina.configure(self.ina.RANGE_16V)
+        self.ina.configure(self.ina.RANGE_16V,gain=self.ina.GAIN_AUTO,
+              bus_adc=self.ina.ADC_128SAMP,
+              shunt_adc=self.ina.ADC_128SAMP)
 
 time_start = time.time()
 seconds = 0
@@ -75,6 +78,7 @@ def Uploadingevent():
 def Measureevent():
     print("Making measurement...")
     rpi_Sch.makemeasurements()
+    
     
 print ("Current shunt scheduled measurement")
 
