@@ -40,13 +40,12 @@ class RPI_Sceduler:
         
        if self.fc is not None:
            self.fc.UpdateLocalDataFile(self.measurement)
-          # self.fc.CopyFileToUSB("/media/USB")
 
     def uploadFile(self):
         if self.fc is not None:
             #USB device need to be mounted
             print "\nCopy file to USB device"
-            self.fc.CopyFileToUSB("/media/USB")
+            self.fc.CopyFileToUSB("/media/usb")
             if self.fc.UploadLocalDataFile() == True:
                self.measurement = None
                self.measurement =dict()
@@ -92,7 +91,7 @@ print ("Measurement  run every 30 sec and upload every 1 hour")
 while True:
     try:
         schedule.run_pending()
-        time.sleep(1)
+        time.sleep(30)
         
         
         if minutes >= 60:
