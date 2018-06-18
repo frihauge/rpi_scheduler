@@ -141,10 +141,10 @@ class FileCtrl:
           return False    
     
   def CopyFileToUSB(self,destination):
-      source = 'localfiles//'+self.RpiSerialNumber+'_l.json'
+      source = '/home/pi/programs/rpi_scheduler/localfiles/'+self.RpiSerialNumber+'_l.json'
       timestr = time.strftime("%Y%m%d-%H%M%S")
       filename = self.RpiSerialNumber+'_'+timestr+'.json'
-      print("Copy file " + source + "to "+ destination+ '//'+filename)
+      print("Copy file " + source + " to "+ destination+ '/'+filename)
       try:
           shutil.copy2(source, destination+ '/'+filename)
       except shutil.Error as e:
