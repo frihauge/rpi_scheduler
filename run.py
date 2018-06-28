@@ -17,11 +17,13 @@ class RPI_Sceduler:
        self.address = 0x40
        self.max_expected_amps = 50
        
+       # Vars for objects
        self.ina = None
        self.fc = None
        self.measurement =dict()
   
        self.initINA219()
+       #Init file control incl. FTP upload
        self.ConnectFileCtrl()   
        
     def makemeasurements(self):
@@ -71,35 +73,31 @@ class RPI_Sceduler:
         self.ina.configure(self.ina.RANGE_16V)#,gain=self.ina.GAIN_AUTO,
 #              bus_adc=self.ina.ADC_128SAMP,
 #              shunt_adc=self.ina.ADC_128SAMP)
+#Main start here 
 
-time_start = time.time()
-seconds = 0
-minutes = 0
-
+#Timerevents
 def Uploadingevent():
     print("Uploading file to FTP...")
     rpi_Sch.uploadFile()
 def Measureevent():
     print("Making measurement...")
     rpi_Sch.makemeasurements()
-    
-    
+        
 print ("Current shunt scheduled measurement")
 
+#Create RPI_Sceduler object
 rpi_Sch = RPI_Sceduler()
+#Setup a 30 sec timer event
 schedule.every(30).seconds.do(Measureevent)
-#schedule.every(45).seconds.do(Uploadingevent)
+#Setup a 1 hour timer event
 schedule.every().hour.do(Uploadingevent)
 print ("Startup complete/n")
 print ("Measurement  run every 30 sec and upload every 1 hour")
 
 while True:
     try:
+        #Wait for timer events
         schedule.run_pending()
-        time.sleep(30)
-        
-        
-        if minutes >= 60:
-            minutes = 0
+      
     except KeyboardInterrupt, e:
         break
