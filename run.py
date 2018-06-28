@@ -7,19 +7,23 @@ from ina219 import INA219
 
 
 
+
+
 class RPI_Sceduler:
 
     def __init__(self):
-       shunt_ohms = 0.1
-       self.address = 40
-       self.max_expected_amps = 0.6
+       #Setting for INA219
+       self.shunt_ohms = 0.0015
+       self.address = 0x40
+       self.max_expected_amps = 50
+       
        self.ina = None
        self.fc = None
        self.measurement =dict()
   
        self.initINA219()
        self.ConnectFileCtrl()   
-
+       
     def makemeasurements(self):
        print "\nMake Measurement"
        i = 0
@@ -60,9 +64,10 @@ class RPI_Sceduler:
         return 
      
     def initINA219(self):
-        self.ina = INA219(shunt_ohms=0.0015,
-                     max_expected_amps = 50,
-                     address=0x40)
+        
+        self.ina = INA219(shunt_ohms=self.shunt_ohms,
+                     max_expected_amps = self.max_expected_amps,
+                     address=self.address)
         self.ina.configure(self.ina.RANGE_16V)#,gain=self.ina.GAIN_AUTO,
 #              bus_adc=self.ina.ADC_128SAMP,
 #              shunt_adc=self.ina.ADC_128SAMP)
