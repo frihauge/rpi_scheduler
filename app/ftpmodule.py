@@ -82,6 +82,7 @@ class FTPConnect:
 class FileCtrl:
      
   def __init__(self):
+    #Get Serial from RPI   
     self.RpiSerialNumber = self.getserial() 
     if not os.path.exists('localfiles'):
         os.makedirs('localfiles')
